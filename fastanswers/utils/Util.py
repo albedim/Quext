@@ -14,6 +14,7 @@ from resources.rest_service import config
 class Util():
 
     USER_NOT_FOUND = 'This user was not found'
+    RESULTS_NOT_FOUND = 'No results were found for this question'
     USER_SUCCESSFULLY_ADDED = 'This user was successfully added'
     USER_ALREADY_EXISTS = 'This user already exists'
 
@@ -21,8 +22,8 @@ class Util():
     def createList(cls, elements):
         response = []
         for element in elements:
-            response.append(element.toJson())
-        return jsonify(response)
+            response.append(element)
+        return response
 
     @classmethod
     def createSuccessResponse(cls, success, param):
