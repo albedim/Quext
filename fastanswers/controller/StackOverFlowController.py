@@ -13,7 +13,7 @@ stackOverFlowService: StackOverFlowService = StackOverFlowService()
 @stackOverFlow.route("/get", methods=['GET'])
 @cross_origin()
 def get():
-    return stackOverFlowService.get(request.args.get('query'))
+    return stackOverFlowService.get(request.args.get('query'), request.args.get('language'))
 
 
 

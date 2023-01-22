@@ -1,5 +1,10 @@
+import datetime
+
 import requests
+from fastanswers.service.TranslatingService import TranslatingService
+import translators.server as ts
 from flask import jsonify
+from googletrans import Translator
 
 from fastanswers.utils.Util import Util
 
@@ -17,12 +22,13 @@ class StackOverFlowService():
     def __init__(self):
         pass
 
-    def get(self, request: str):
-        response = requests.get('https://api.stackexchange.com/2.3/search/advanced?order=asc&pagesize=80&sort=creation'
-                                '&q=' + request.replace(" ", "%20") +
+    def get(self, request: str, language: str):
+        newRequest = TranslatingService.translate(request.replace("%20", " "), 'en')
+        response = requests.get('https://api.stackexchange.com/2.3/search/advanced?pagesize=80' +
+                                '&order=desc&sort=activity&title='+newRequest.replace(" ", "%20") +
                                 '&site=stackoverflow&filter=!-MBrU_IzpJ5H-AG6Bbzy.X-BYQe(2v-.J').json()['items']
         answers = self.getAnswers(response)
-        return self.balance(answers)
+        return self.balance(answers, language)
 
     # get the answers from json response
     @classmethod
@@ -35,30 +41,24 @@ class StackOverFlowService():
                     finalResponse.append(answer)
         return finalResponse
 
-    # get the answers which are tagged
+    # get the answers which are accepted
     @classmethod
-    def filterByTrust(cls, answers):
+    def filterByTrust(cls, answers, language):
         finalResponse = []
         for answer in answers:
             if answer['is_accepted']:
-                finalResponse.append(answer)
+                finalResponse.append({
+                    'timestamp': int(datetime.datetime.timestamp(datetime.datetime.now())),
+                    'title': TranslatingService.translate(answer['title'], language),
+                    'answer': TranslatingService.join(answer['body'], language)
+                })
         return finalResponse
 
     # balances the results
-    def balance(self, answers):
-        trustedAnswers = self.filterByTrust(answers)
+    def balance(self, answers, language):
+        trustedAnswers = self.filterByTrust(answers, language)
         if len(trustedAnswers) > 0:
-            return self.cut(trustedAnswers)
-
-    @classmethod
-    def cut(cls, array: list):
-        if len(array) >= 3:
-            return jsonify([
-                array[len(array) - 3],
-                array[len(array) - 2],
-                array[len(array) - 1]
-            ])
-        else:
-            return jsonify(array)
+            return jsonify(trustedAnswers)
+        return Util.createWrongResponse(False, Util.RESULTS_NOT_FOUND, 404)
 
 

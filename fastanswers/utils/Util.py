@@ -1,4 +1,6 @@
 import datetime
+import random
+
 from flask import jsonify
 from resources.rest_service import config
 
@@ -14,6 +16,7 @@ from resources.rest_service import config
 class Util():
 
     USER_NOT_FOUND = 'This user was not found'
+    LINK_SUCCESSFULLY_CREATED = "Link successfully created"
     RESULTS_NOT_FOUND = 'No results were found for this question'
     USER_SUCCESSFULLY_ADDED = 'This user was successfully added'
     USER_ALREADY_EXISTS = 'This user already exists'
@@ -70,3 +73,11 @@ class Util():
                     unhashedPassword += chars[j]
                     break
         return unhashedPassword
+
+    @classmethod
+    def createLink(cls):
+        letters = "ABCDEFGHILMNOPQRSTUVZYJKXabcdefghilmnopqrstuvzyjkx0123456789"
+        link = ""
+        for i in range(40):
+            link += letters[random.randint(0,60)]
+        return link
