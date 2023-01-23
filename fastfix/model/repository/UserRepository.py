@@ -1,5 +1,7 @@
 from fastanswers.configuration.config import sql
 from fastanswers.model.entity.User import User
+from fastanswers.utils.Util import Util
+
 
 #
 # @author: albedim <dimaio.albe@gmail.com>
@@ -26,3 +28,8 @@ class UserRepository():
     def exists(self, email):
         users: User = sql.session.query(User).filter(User.email == email).count()
         return users
+
+    def changePassword(self, userId, password):
+        user: User = sql.session.query(User).filter(User.userId == userId).first()
+        user.password = password
+        sql.session.commit()

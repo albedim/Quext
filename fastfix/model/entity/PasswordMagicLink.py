@@ -22,5 +22,5 @@ class PasswordMagicLink(sql.Model):
         return {
             'id': self.id,
             'link': self.link,
-            'name': self.userId
+            'userId': self.userId
         }

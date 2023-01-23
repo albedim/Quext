@@ -1,12 +1,12 @@
 import datetime
 
 import requests
-from fastanswers.service.TranslatingService import TranslatingService
+from fastfix.service.TranslatingService import TranslatingService
 import translators.server as ts
 from flask import jsonify
 from googletrans import Translator
 
-from fastanswers.utils.Util import Util
+from fastfix.utils.Util import Util
 
 
 #
