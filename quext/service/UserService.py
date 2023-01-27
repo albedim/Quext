@@ -1,5 +1,5 @@
-from fastfix.model.entity.User import User
-from fastfix.utils.Util import Util
+from quext.model.entity.User import User
+from quext.utils.Util import Util
 
 #
 # @author: albedim <dimaio.albe@gmail.com>

@@ -1,6 +1,5 @@
-from fastanswers.configuration.config import sql
-from fastanswers.model.entity.User import User
-from fastanswers.utils.Util import Util
+from quext.configuration.config import sql
+from quext.model.entity.User import User
 
 
 #

@@ -1,6 +1,6 @@
-from fastfix.configuration.config import sql
-from fastfix.model.entity.PasswordMagicLink import PasswordMagicLink
-from fastfix.utils.Util import Util
+from quext.configuration.config import sql
+from quext.model.entity.PasswordMagicLink import PasswordMagicLink
+from quext.utils.Util import Util
 
 
 #
@@ -17,7 +17,7 @@ class PasswordMagicLinkRepository():
         pass
 
     def create(self, userId):
-        passwordMagicLink: PasswordMagicLink = PasswordMagicLink(Util.createLink(), userId)
+        passwordMagicLink: PasswordMagicLink = PasswordMagicLink(Util.createLink(40), userId)
         sql.session.add(passwordMagicLink)
         sql.session.commit()
 

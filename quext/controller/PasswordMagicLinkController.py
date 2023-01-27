@@ -1,11 +1,9 @@
 from flask import Blueprint, request
 from flask_cors import cross_origin
 
-from fastfix.model.repository.PasswordMagicLinkRepository import PasswordMagicLinkRepository
-from fastfix.model.repository.UserRepository import UserRepository
-from fastfix.service.PasswordMagicLinkService import PasswordMagicLinkService
-from fastfix.service.UserService import UserService
-from fastfix.utils.Util import Util
+from quext.model.repository.PasswordMagicLinkRepository import PasswordMagicLinkRepository
+from quext.service.PasswordMagicLinkService import PasswordMagicLinkService
+from quext.utils.Util import Util
 
 passwordMagicLink: Blueprint = Blueprint('PasswordMagicLink', __name__, url_prefix=Util.getURL('password-magic-link'))
 

@@ -1,10 +1,10 @@
 from flask import Blueprint, request
 from flask_cors import cross_origin
 
-from fastfix.controller.PasswordMagicLinkController import passwordMagicLinkService
-from fastfix.model.repository.UserRepository import UserRepository
-from fastfix.service.UserService import UserService
-from fastfix.utils.Util import Util
+from quext.controller.PasswordMagicLinkController import passwordMagicLinkService
+from quext.model.repository.UserRepository import UserRepository
+from quext.service.UserService import UserService
+from quext.utils.Util import Util
 
 user: Blueprint = Blueprint('UserController', __name__, url_prefix=Util.getURL('user'))
 

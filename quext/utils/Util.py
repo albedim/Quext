@@ -16,11 +16,9 @@ from resources.rest_service import config
 class Util():
 
     USER_NOT_FOUND = 'This user was not found'
-    RESEARCH_SUCCESSFULLY_ADDED = 'The research was successfully added'
     INVALID_REQUEST = 'Invalid request'
     USER_PASSWORD_SUCCESSFULLY_CHANGED = "Your password has been changed"
     LINK_SUCCESSFULLY_CREATED = "Link successfully created"
-    RESULTS_NOT_FOUND = 'No results were found for this question'
     USER_SUCCESSFULLY_ADDED = 'This user was successfully added'
     USER_ALREADY_EXISTS = 'This user already exists'
 
@@ -78,9 +76,9 @@ class Util():
         return unhashedPassword
 
     @classmethod
-    def createLink(cls):
+    def createLink(cls, length):
         letters = "ABCDEFGHILMNOPQRSTUVZYJKXabcdefghilmnopqrstuvzyjkx0123456789"
         link = ""
-        for i in range(40):
+        for i in range(length):
             link += letters[random.randint(0,59)]
         return link

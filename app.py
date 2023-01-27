@@ -6,6 +6,4 @@ sql.create_all()
 
 # controllers init
 app.register_blueprint(PasswordMagicLinkController.passwordMagicLink)
-app.register_blueprint(ResearchController.research)
-app.register_blueprint(StackOverFlowController.stackOverFlow)
 app.register_blueprint(UserController.user)
