@@ -1,6 +1,10 @@
+import base64
 import datetime
+import io
+import os
 import random
 
+from PIL import Image
 from flask import jsonify
 from resources.rest_service import config
 
@@ -82,3 +86,16 @@ class Util():
         for i in range(length):
             link += letters[random.randint(0,59)]
         return link
+
+
+    @classmethod
+    def decodeImage(cls, encodedImage):
+        decodedImage = base64.b64decode(str(encodedImage))
+        file = Image.open(io.BytesIO(decodedImage))
+        imageName = cls.createLink(10)
+        file.save(f'quext/files/{imageName}.png', 'png')
+        return imageName + '.png'
+
+    @classmethod
+    def deleteFile(cls, imageName):
+        os.remove("quext/files/" + imageName)
