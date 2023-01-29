@@ -1,5 +1,9 @@
 from quext.model.entity.User import User
+from quext.model.repository.UserRepository import signin, exists, changePassword, signup
+from quext.service.PasswordMagicLinkService import deleteLink
 from quext.utils.Util import Util
+from quext.utils.exceptions.IncorrectApiKeyException import IncorrectApiKeyException
+
 
 #
 # @author: albedim <dimaio.albe@gmail.com>
@@ -10,49 +14,55 @@ from quext.utils.Util import Util
 #
 
 
-class UserService():
+def signinUser(request: dict):
+    try:
+        Util.checkApiKey(request['API_KEY'])  # if not, raise exception
+        user: User = signin(
+            request['email'],
+            Util.hash(request['password'])
+        )
+        if user is not None:
+            return Util.createSuccessResponse(True, user.userId)
+        else:
+            return Util.createWrongResponse(False, Util.USER_NOT_FOUND, 404)
+    except KeyError:
+        return Util.createWrongResponse(False, Util.INVALID_REQUEST, 405)
+    except IncorrectApiKeyException:
+        return Util.createWrongResponse(False, Util.INCORRECT_API_KEY, 403)
 
-    def __init__(self, userRepository, passwordMagicLinkService):
-        self.passwordMagicLinkService = passwordMagicLinkService
-        self.userRepository = userRepository
 
-    def signin(self, request: dict):
-        try:
-            user: User = self.userRepository.signin(
-                request.get('email'),
-                Util.hash(request.get('password'))
+def existsByEmail(email) -> bool:
+    return exists(email) > 0
+
+
+def changeUserPassword(request):
+    try:
+        Util.checkApiKey(request['API_KEY'])  # if not, raise exception
+        changePassword(
+            request['userId'],
+            Util.hash(request['password'])
+        )
+        deleteLink(request['userId'])
+        return Util.createSuccessResponse(True, Util.USER_PASSWORD_SUCCESSFULLY_CHANGED)
+    except KeyError:
+        return Util.createWrongResponse(False, Util.INVALID_REQUEST, 405)
+    except IncorrectApiKeyException:
+        return Util.createWrongResponse(False, Util.INCORRECT_API_KEY, 403)
+
+
+def signupUser(request: dict):
+    Util.checkApiKey(request['API_KEY'])  # if not, raise exception
+    try:
+        if not existsByEmail(request['email']):
+            signup(
+                request['name'],
+                request['email'],
+                Util.hash(request['password'])
             )
-            if user is not None:
-                return Util.createSuccessResponse(True, user.userId)
-            else:
-                return Util.createWrongResponse(False, Util.USER_NOT_FOUND, 404)
-        except AttributeError:
-            return Util.createWrongResponse(False, Util.INVALID_REQUEST, 405)
-
-    def exists(self, email) -> bool:
-        return self.userRepository.exists(email) > 0
-
-    def changePassword(self, request):
-        try:
-            self.userRepository.changePassword(
-                request.get('userId'),
-                Util.hash(request.get('password'))
-            )
-            self.passwordMagicLinkService.delete(request.get('userId'))
-            return Util.createSuccessResponse(True, Util.USER_PASSWORD_SUCCESSFULLY_CHANGED)
-        except AttributeError:
-            return Util.createWrongResponse(False, Util.INVALID_REQUEST, 405)
-
-    def signup(self, request: dict):
-        try:
-            if not self.exists(request.get('email')):
-                self.userRepository.signup(
-                    request.get('name'),
-                    request.get('email'),
-                    Util.hash(request.get('password'))
-                )
-                return Util.createSuccessResponse(True, Util.USER_SUCCESSFULLY_ADDED)
-            else:
-                return Util.createWrongResponse(False, Util.USER_ALREADY_EXISTS, 403)
-        except AttributeError:
-            return Util.createWrongResponse(False, Util.INVALID_REQUEST, 405)
+            return Util.createSuccessResponse(True, Util.USER_SUCCESSFULLY_ADDED)
+        else:
+            return Util.createWrongResponse(False, Util.USER_ALREADY_EXISTS, 403)
+    except KeyError:
+        return Util.createWrongResponse(False, Util.INVALID_REQUEST, 405)
+    except IncorrectApiKeyException:
+        return Util.createWrongResponse(False, Util.INCORRECT_API_KEY, 403)

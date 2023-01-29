@@ -1,14 +1,20 @@
-import spacy
+from cv2 import cv2
 from googletrans import Translator
-from spacy.lang.en.stop_words import STOP_WORDS
-from string import punctuation
-from collections import Counter
-from heapq import nlargest
+
+from quext.utils.Util import Util
+from nltk.corpus import stopwords
+from nltk.cluster.util import cosine_distance
 
 import pandas as pd
 import easyocr
-import cv2
-from quext.utils.Util import Util
+import numpy as np
+import networkx as nx
+import nltk
+
+from quext.utils.exceptions.IncorrectApiKeyException import IncorrectApiKeyException
+
+nltk.download('stopwords')
+
 
 #
 # @author: albedim <dimaio.albe@gmail.com>
@@ -19,65 +25,102 @@ from quext.utils.Util import Util
 #
 
 
-class SummaryService():
-
-    def __init__(self):
-        pass
-
-    def get(cls, request):
-        imageName = Util.decodeImage(request.get('encodedImage'))
-        text = cls.getText(imageName)
+def getSummary(request):
+    try:
+        Util.checkApiKey(request['API_KEY'])  # if not, raise exception
+        imageName = Util.decodeImage(request['encodedImage'])
+        text = getText(imageName)
         Util.deleteFile(imageName)
-        return Util.createSuccessResponse(True, cls.summary(request.get('language'), text))
+        return Util.createSuccessResponse(True, generate_summary(text, 4, request['language']))
+    except KeyError:
+        return Util.createWrongResponse(False, Util.INVALID_REQUEST, 405)
+    except IncorrectApiKeyException:
+        return Util.createWrongResponse(False, Util.INCORRECT_API_KEY, 403)
 
 
-    def getText(cls, image):
-        img = cv2.imread('quext/files/' + image)
-        reader = easyocr.Reader(['en'])
-        result = reader.readtext(img, paragraph=False)
-        df = pd.DataFrame(result)
-        doc = ''
-        for sentence in df[1]:
-            doc += str(sentence) + ' '
-        return doc
+def getText(image):
+    translator = Translator()
+    img = cv2.imread('quext/files/' + image)
+    reader = easyocr.Reader(['en'])
+    result = reader.readtext(img, paragraph=False)
+    df = pd.DataFrame(result)
+    doc = ''
+    for sentence in df[1]:
+        doc += str(sentence) + ' '
+    return translator.translate(doc, dest='en').text
 
 
-    def summary(cls, language, text):
-        nlp = spacy.load('en_core_web_sm')
-        translator = Translator()
-        text = translator.translate(text, dest='en').text
-        doc = nlp(text)
-        keyword = []
-        stopwords = list(STOP_WORDS)
-        pos_tag = ['PROPN', 'ADJ', 'NOUN', 'VERB']
-        for token in doc:
-            if token.text in stopwords or token.text in punctuation:
+def readArticle(text):
+    article = text.split(". ")
+    sentences = []
+
+    for sentence in article:
+        sentences.append(sentence.replace("[^a-zA-Z]", " ").split(" "))
+    sentences.pop()
+
+    return sentences
+
+
+def sentenceSimilarity(sent1, sent2, stopwords=None):
+    if stopwords is None:
+        stopwords = []
+
+    sent1 = [w.lower() for w in sent1]
+    sent2 = [w.lower() for w in sent2]
+
+    allWords = list(set(sent1 + sent2))
+
+    vector1 = [0] * len(allWords)
+    vector2 = [0] * len(allWords)
+
+    # build the vector for the first sentence
+    for w in sent1:
+        if w in stopwords:
+            continue
+        vector1[allWords.index(w)] += 1
+
+    # build the vector for the second sentence
+    for w in sent2:
+        if w in stopwords:
+            continue
+        vector2[allWords.index(w)] += 1
+
+    return 1 - cosine_distance(vector1, vector2)
+
+
+def buildSimilarityMatrix(sentences, stop_words):
+    # Create an empty similarity matrix
+    similarityMatrix = np.zeros((len(sentences), len(sentences)))
+
+    for idx1 in range(len(sentences)):
+        for idx2 in range(len(sentences)):
+            if idx1 == idx2:  # ignore if both are same sentences
                 continue
-            if token.pos_ in pos_tag:
-                keyword.append(token.text)
+            similarityMatrix[idx1][idx2] = sentenceSimilarity(sentences[idx1], sentences[idx2], stop_words)
 
-        freq_word = Counter(keyword)
-        sent_strength = {}
-        for sent in doc.sents:
-            for word in sent:
-                if word.text in freq_word.keys():
-                    if sent in sent_strength.keys():
-                        sent_strength[sent] += freq_word[word.text]
-                    else:
-                        sent_strength[sent] = freq_word[word.text]
-
-        summarized_sentences = nlargest(cls.getStrength(text), sent_strength, key=sent_strength.get)
-        newText = ''
-        for sentence in summarized_sentences:
-            newText += str(sentence)
-
-        return translator.translate(newText, dest=language).text
+    return similarityMatrix
 
 
-    def getStrength(self, text):
-        if len(text) <= 1500:
-            return 2
-        if 1500 < len(text) <= 2740:
-            return 4
-        if len(text) > 2740:
-            return 6
+def generateSummary(text, top_n, language):
+    stopWords = stopwords.words('english')
+    summarizeText = []
+
+    # Step 1 - Read text anc split it
+    sentences = readArticle(text)
+
+    # Step 2 - Generate Similary Martix across sentences
+    sentenceSimilarityMartix = buildSimilarityMatrix(sentences, stopWords)
+
+    # Step 3 - Rank sentences in similarity martix
+    sentence_similarity_graph = nx.from_numpy_array(sentenceSimilarityMartix)
+    scores = nx.pagerank(sentence_similarity_graph)
+
+    # Step 4 - Sort the rank and pick top sentences
+    ranked_sentence = sorted(((scores[i], s) for i, s in enumerate(sentences)), reverse=True)
+
+    for i in range(top_n):
+        summarizeText.append(" ".join(ranked_sentence[i][1]))
+
+    # Step 5 - Offcourse, output the summarize text
+    translator = Translator()
+    return translator.translate(". ".join(summarizeText), dest=language).text

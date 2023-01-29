@@ -10,25 +10,24 @@ from quext.model.entity.User import User
 # Description: This is the class for the user repository
 #
 
-class UserRepository():
 
-    def __init__(self):
-        pass
+def signin(email, password) -> User:
+    user: User = sql.session.query(User).filter(User.email == email).filter(User.password == password).first()
+    return user
 
-    def signin(self, email, password) -> User:
-        user: User = sql.session.query(User).filter(User.email == email).filter(User.password == password).first()
-        return user
 
-    def signup(self, name, email, password) -> None:
-        user: User = User(name, email, password)
-        sql.session.add(user)
-        sql.session.commit()
+def signup(name, email, password) -> None:
+    user: User = User(name, email, password)
+    sql.session.add(user)
+    sql.session.commit()
 
-    def exists(self, email):
-        users: User = sql.session.query(User).filter(User.email == email).count()
-        return users
 
-    def changePassword(self, userId, password):
-        user: User = sql.session.query(User).filter(User.userId == userId).first()
-        user.password = password
-        sql.session.commit()
+def exists(email):
+    users: User = sql.session.query(User).filter(User.email == email).count()
+    return users
+
+
+def changePassword(userId, password):
+    user: User = sql.session.query(User).filter(User.userId == userId).first()
+    user.password = password
+    sql.session.commit()

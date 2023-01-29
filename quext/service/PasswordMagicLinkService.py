@@ -1,5 +1,8 @@
-from quext.model.entity.User import User
+from quext.model.repository.PasswordMagicLinkRepository import create, get, delete
 from quext.utils.Util import Util
+from quext.utils.exceptions.IncorrectApiKeyException import IncorrectApiKeyException
+from resources.config import config
+
 
 #
 # @author: albedim <dimaio.albe@gmail.com>
@@ -10,22 +13,37 @@ from quext.utils.Util import Util
 #
 
 
-class PasswordMagicLinkService():
-
-    def __init__(self, passwordMagicLinkRepository):
-        self.passwordMagicLinkRepository = passwordMagicLinkRepository
-
-    def create(self, request):
-        self.passwordMagicLinkRepository.create(request['userId'])
+def createLink(request):
+    try:
+        Util.checkApiKey(request['API_KEY'])  # if not, raise exception
+        create(request['userId'])
         return Util.createSuccessResponse(True, Util.LINK_SUCCESSFULLY_CREATED)
+    except KeyError:
+        return Util.createWrongResponse(False, Util.INVALID_REQUEST, 405)
+    except IncorrectApiKeyException:
+        return Util.createWrongResponse(False, Util.INCORRECT_API_KEY, 403)
 
-    def get(self, request):
-        passwordMagicLink = self.passwordMagicLinkRepository.get(request['link'])
+
+def getUserId(request):
+    try:
+        Util.checkApiKey(request['API_KEY'])  # if not, raise exception
+        passwordMagicLink = get(request['link'])
         if passwordMagicLink is not None:
             return Util.createSuccessResponse(True, passwordMagicLink.userId)
         else:
             return Util.createWrongResponse(False, Util.USER_NOT_FOUND, 404)
+    except KeyError:
+        return Util.createWrongResponse(False, Util.INVALID_REQUEST, 405)
+    except IncorrectApiKeyException:
+        return Util.createWrongResponse(False, Util.INCORRECT_API_KEY, 403)
 
-    def delete(self, userId):
-        self.passwordMagicLinkRepository.delete(userId)
+
+def deleteLink(userId, apiKey):
+    try:
+        Util.checkApiKey(apiKey)  # if not, raise exception
+        delete(userId)
         return Util.createSuccessResponse(True, None)
+    except KeyError:
+        return Util.createWrongResponse(False, Util.INVALID_REQUEST, 405)
+    except IncorrectApiKeyException:
+        return Util.createWrongResponse(False, Util.INCORRECT_API_KEY, 403)

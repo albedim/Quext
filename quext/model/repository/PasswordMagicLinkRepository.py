@@ -11,20 +11,17 @@ from quext.utils.Util import Util
 # Description: This is the class for the user repository
 #
 
-class PasswordMagicLinkRepository():
+def create(userId):
+    passwordMagicLink: PasswordMagicLink = PasswordMagicLink(Util.createLink(40), userId)
+    sql.session.add(passwordMagicLink)
+    sql.session.commit()
 
-    def __init__(self):
-        pass
 
-    def create(self, userId):
-        passwordMagicLink: PasswordMagicLink = PasswordMagicLink(Util.createLink(40), userId)
-        sql.session.add(passwordMagicLink)
-        sql.session.commit()
+def get(link):
+    passwordMagicLink = sql.session.query(PasswordMagicLink).filter(PasswordMagicLink.link == link).first()
+    return passwordMagicLink
 
-    def get(self, link):
-        passwordMagicLink = sql.session.query(PasswordMagicLink).filter(PasswordMagicLink.link == link).first()
-        return passwordMagicLink
 
-    def delete(self, userId):
-        sql.session.query(PasswordMagicLink).filter(PasswordMagicLink.userId == userId).delete()
-        sql.session.commit()
+def delete(userId):
+    sql.session.query(PasswordMagicLink).filter(PasswordMagicLink.userId == userId).delete()
+    sql.session.commit()

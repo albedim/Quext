@@ -6,6 +6,8 @@ import random
 
 from PIL import Image
 from flask import jsonify
+
+from quext.utils.exceptions.IncorrectApiKeyException import IncorrectApiKeyException
 from resources.rest_service import config
 
 #
@@ -20,6 +22,8 @@ from resources.rest_service import config
 class Util():
 
     USER_NOT_FOUND = 'This user was not found'
+    INCORRECT_API_KEY = 'Your api key is not correct'
+    SERVER_ERROR = 'An error occurred while reading your request'
     INVALID_REQUEST = 'Invalid request'
     USER_PASSWORD_SUCCESSFULLY_CHANGED = "Your password has been changed"
     LINK_SUCCESSFULLY_CREATED = "Link successfully created"
@@ -99,3 +103,8 @@ class Util():
     @classmethod
     def deleteFile(cls, imageName):
         os.remove("quext/files/" + imageName)
+
+    @classmethod
+    def checkApiKey(cls, apiKey):
+        if apiKey != config.get("owner_api_key"):
+            raise IncorrectApiKeyException

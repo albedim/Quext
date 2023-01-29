@@ -1,4 +1,4 @@
-from app import sql
+from quext.configuration.config import sql
 
 #
 # @author: albedim <dimaio.albe@gmail.com>
