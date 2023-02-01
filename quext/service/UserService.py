@@ -6,7 +6,7 @@ from quext.utils.exceptions.IncorrectApiKeyException import IncorrectApiKeyExcep
 
 
 #
-# @author: albedim <dimaio.albe@gmail.com>
+# @author: Alberto Di Maio, albedim <dimaio.albe@gmail.com>
 # Created on: 22/01/23
 # Created at: 02:35
 # Version: 1.0.0

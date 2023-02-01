@@ -1,3 +1,4 @@
+import requests
 from cv2 import cv2
 from googletrans import Translator
 
@@ -17,7 +18,7 @@ nltk.download('stopwords')
 
 
 #
-# @author: albedim <dimaio.albe@gmail.com>
+# @author: Alberto Di Maio, albedim <dimaio.albe@gmail.com>
 # Created on: 27/01/23
 # Created at: 23:14
 # Version: 1.0.0
@@ -25,20 +26,43 @@ nltk.download('stopwords')
 #
 
 
-def getSummary(request):
+def getSummaryByImage(request):
+    """ Gets the request, decode the image and works on it """
     try:
         Util.checkApiKey(request['API_KEY'])  # if not, raise exception
         imageName = Util.decodeImage(request['encodedImage'])
         text = getText(imageName)
         Util.deleteFile(imageName)
-        return Util.createSuccessResponse(True, generate_summary(text, 4, request['language']))
+        return Util.createSuccessResponse(True, generateSummary(text, 4, request['language']))
     except KeyError:
         return Util.createWrongResponse(False, Util.INVALID_REQUEST, 405)
     except IncorrectApiKeyException:
         return Util.createWrongResponse(False, Util.INCORRECT_API_KEY, 403)
+    except IndexError:
+        return Util.createWrongResponse(False, Util.IMAGE_ANGLE, 500)
+    except Exception as e:
+        print(e)
+        return Util.createWrongResponse(False, Util.SERVER_ERROR, 500)
+
+
+def getSummaryByText(request):
+    """ Gets the request and works on it """
+    try:
+        Util.checkApiKey(request['API_KEY'])  # if not, raise exception
+        return Util.createSuccessResponse(True, generateSummary(request['text'], 4, request['language']))
+    except KeyError:
+        return Util.createWrongResponse(False, Util.INVALID_REQUEST, 405)
+    except IncorrectApiKeyException:
+        return Util.createWrongResponse(False, Util.INCORRECT_API_KEY, 403)
+    except IndexError:
+        return Util.createWrongResponse(False, Util.IMAGE_ANGLE, 500)
+    except Exception as e:
+        print(e)
+        return Util.createWrongResponse(False, Util.SERVER_ERROR, 500)
 
 
 def getText(image):
+    """ Gets the text of the given image @easyocr """
     translator = Translator()
     img = cv2.imread('quext/files/' + image)
     reader = easyocr.Reader(['en'])
@@ -47,10 +71,12 @@ def getText(image):
     doc = ''
     for sentence in df[1]:
         doc += str(sentence) + ' '
+
     return translator.translate(doc, dest='en').text
 
 
 def readArticle(text):
+    """ Reads the text and splits it """
     article = text.split(". ")
     sentences = []
 
@@ -62,6 +88,7 @@ def readArticle(text):
 
 
 def sentenceSimilarity(sent1, sent2, stopwords=None):
+    """ Builds two vectors for both sentences """
     if stopwords is None:
         stopwords = []
 
@@ -105,22 +132,21 @@ def generateSummary(text, top_n, language):
     stopWords = stopwords.words('english')
     summarizeText = []
 
-    # Step 1 - Read text anc split it
+    # text splitter
     sentences = readArticle(text)
 
-    # Step 2 - Generate Similary Martix across sentences
+    # generates matrix which has to be similar to the original array
     sentenceSimilarityMartix = buildSimilarityMatrix(sentences, stopWords)
 
-    # Step 3 - Rank sentences in similarity martix
+    # understands the important sentences
     sentence_similarity_graph = nx.from_numpy_array(sentenceSimilarityMartix)
     scores = nx.pagerank(sentence_similarity_graph)
 
-    # Step 4 - Sort the rank and pick top sentences
+    # mixes everything
     ranked_sentence = sorted(((scores[i], s) for i, s in enumerate(sentences)), reverse=True)
-
     for i in range(top_n):
         summarizeText.append(" ".join(ranked_sentence[i][1]))
 
-    # Step 5 - Offcourse, output the summarize text
+    # translate and return summary
     translator = Translator()
     return translator.translate(". ".join(summarizeText), dest=language).text

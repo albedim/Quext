@@ -10,6 +10,7 @@ from flask import jsonify
 from quext.utils.exceptions.IncorrectApiKeyException import IncorrectApiKeyException
 from resources.rest_service import config
 
+
 #
 # @author: albedim <dimaio.albe@gmail.com>
 # Created on: 22/01/23
@@ -20,8 +21,8 @@ from resources.rest_service import config
 
 
 class Util():
-
     USER_NOT_FOUND = 'This user was not found'
+    IMAGE_ANGLE = 'No text was found in this image, it could be rotated'
     INCORRECT_API_KEY = 'Your api key is not correct'
     SERVER_ERROR = 'An error occurred while reading your request'
     INVALID_REQUEST = 'Invalid request'
@@ -88,9 +89,8 @@ class Util():
         letters = "ABCDEFGHILMNOPQRSTUVZYJKXabcdefghilmnopqrstuvzyjkx0123456789"
         link = ""
         for i in range(length):
-            link += letters[random.randint(0,59)]
+            link += letters[random.randint(0, 59)]
         return link
-
 
     @classmethod
     def decodeImage(cls, encodedImage):

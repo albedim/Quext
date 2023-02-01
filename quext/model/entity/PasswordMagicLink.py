@@ -1,7 +1,7 @@
 from quext.configuration.config import sql
 
 #
-# @author: albedim <dimaio.albe@gmail.com>
+# @author: Alberto Di Maio, albedim <dimaio.albe@gmail.com>
 # Created on: 23/01/23
 # Created at: 00:16
 # Version: 1.0.0

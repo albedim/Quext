@@ -5,7 +5,7 @@ from resources.config import config
 
 
 #
-# @author: albedim <dimaio.albe@gmail.com>
+# @author: Alberto Di Maio, albedim <dimaio.albe@gmail.com>
 # Created on: 22/01/23
 # Created at: 02:35
 # Version: 1.0.0
@@ -25,6 +25,7 @@ def createLink(request):
 
 
 def getUserId(request):
+    """ Get userId of this magic link """
     try:
         Util.checkApiKey(request['API_KEY'])  # if not, raise exception
         passwordMagicLink = get(request['link'])
